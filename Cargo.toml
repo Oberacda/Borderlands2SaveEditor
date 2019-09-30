@@ -10,3 +10,4 @@ protoc-rust = "2.9.0"
 
 [dependencies]
 protobuf = { version = "2.9.0", features = ["with-bytes"] }
+minilzo = "0.2.0"
