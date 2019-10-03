@@ -157,3 +157,5 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+borderlands2/src/protos
+!borderlands2/src/protos/mod.rs
