@@ -4,13 +4,8 @@ version = "0.1.0"
 authors = ["David Oberacker <david.oberacker@microchip.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[build-dependencies.protoc-rust]
-git = "https://github.com/stepancheg/rust-protobuf.git"
+[dependencies.borderlands2]
+path = "borderlands2"
 
-#protobuf = { version = "2.9.0", features = ["with-bytes"] }
-[dependencies]
-sha-1 = "0.8.1"
-minilzo = "0.2.0"
-[dependencies.protobuf]
-git = "https://github.com/stepancheg/rust-protobuf.git"
+[workspace]
+members = ["borderlands2"]

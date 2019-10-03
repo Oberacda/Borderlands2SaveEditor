@@ -1,8 +1,15 @@
 extern crate protoc_rust;
 
+use std::fs;
+
 use protoc_rust::Customize;
 
 fn main() {
+	let dir_result = fs::create_dir_all("src/protos");
+	if dir_result.is_err() {
+		panic!("cargo:warning=Output dir cannot be created!");
+	}
+
 	protoc_rust::Args::new()
 		.out_dir("src/protos")
 		.inputs(&[

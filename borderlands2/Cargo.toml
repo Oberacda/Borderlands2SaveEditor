@@ -1,0 +1,18 @@
+[package]
+name = "borderlands2"
+version = "0.1.0"
+authors = ["David Oberacker <david.oberacker@gmail.com>"]
+edition = "2018"
+build = "build.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[build-dependencies.protoc-rust]
+git = "https://github.com/stepancheg/rust-protobuf.git"
+
+[dependencies]
+sha-1 = "0.8.1"
+minilzo = "0.2.0"
+
+[dependencies.protobuf]
+git = "https://github.com/stepancheg/rust-protobuf.git"
+features = ["with-bytes"]

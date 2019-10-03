@@ -1,12 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="CPP_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+    <content url="file://$MODULE_DIR$/../borderlands2_save_editor">
+      <sourceFolder url="file://$MODULE_DIR$/../borderlands2_save_editor/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/benches" isTestSource="true" />
-      <excludeFolder url="file://$MODULE_DIR$/target" />
+      <sourceFolder url="file://$MODULE_DIR$/../borderlands2_save_editor/borderlands2/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/borderlands2/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/borderlands2/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/borderlands2/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../borderlands2_save_editor/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../borderlands2_save_editor/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../borderlands2_save_editor/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../borderlands2_save_editor/borderlands2/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../borderlands2_save_editor/borderlands2/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../borderlands2_save_editor/borderlands2/benches" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/borderlands2/target" />
+      <excludeFolder url="file://$MODULE_DIR$/../borderlands2_save_editor/borderlands2/target" />
+      <excludeFolder url="file://$MODULE_DIR$/../borderlands2_save_editor/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
