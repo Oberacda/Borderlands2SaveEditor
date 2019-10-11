@@ -11,9 +11,9 @@ pub mod hufman {
         /// Is this node a leaf?
         is_leaf : bool,
         /// Index of the left subtree. If node is a leaf, this is -1.
-        left : usize,
+        left : i64,
         /// Index of the right subtree. If node is a leaf, this is -1.
-        right : usize
+        right : i64
     }
     impl Default for Node {
     fn default() -> Node {
@@ -23,7 +23,7 @@ pub mod hufman {
 
     fn decode_byte(data: & bit_vec::BitVec, offset: & mut usize) -> u8 {
         let mut value : u8 = 0;
-        for i in 7..0 {
+        for i in (0..8).rev() {
             let v = if data[*offset] {
                 1
             } else {
@@ -44,14 +44,14 @@ pub mod hufman {
 
         if is_leaf {
             let value = decode_byte(&data, offset);
-            tree[current].left = 0;
-            tree[current].right = 0;
+            tree[current].left = -1;
+            tree[current].right = -1;
             tree[current].is_leaf = true;
             tree[current].symbol = value;
         } else {
             tree[current].is_leaf = false;
-            tree[current].left = decode_node(&data, offset, tree, index);
-            tree[current].left = decode_node(&data, offset, tree, index);
+            tree[current].left = decode_node(&data, offset, tree, index) as i64;
+            tree[current].right = decode_node(&data, offset, tree, index) as i64;
         }
 
         return current;
