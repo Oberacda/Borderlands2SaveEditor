@@ -12,6 +12,7 @@ git = "https://github.com/stepancheg/rust-protobuf.git"
 [dependencies]
 sha-1 = "0.8.1"
 minilzo = "0.2.0"
+bit-vec = "0.6"
 
 [dependencies.protobuf]
 git = "https://github.com/stepancheg/rust-protobuf.git"
