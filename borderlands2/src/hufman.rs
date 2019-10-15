@@ -1,6 +1,10 @@
 extern crate bit_vec;
 
 pub mod hufman {
+    //!
+    //! Module to decode and encode a hufman tree.
+    //!
+
     ///
     /// Struct describing a node in a huffman tree.
     /// 
@@ -20,7 +24,11 @@ pub mod hufman {
         Node {symbol: 0, is_leaf: false, right: 0, left: 0}
    }
 }
-
+    ///
+    /// Decodes a byte from the data BitVec starting at offset.
+    ///
+    /// If the bitvector is shorter then offset + 7.
+    ///
     fn decode_byte(data: & bit_vec::BitVec, offset: & mut usize) -> u8 {
         let mut value : u8 = 0;
         for i in (0..8).rev() {
@@ -35,12 +43,18 @@ pub mod hufman {
         return value;
     }
 
+    ///
+    /// Decodes a node in the hufman tree.
+    ///
+    /// The decoding starts at index in the tree and starts at offset in the data.
+    /// Every decoded node is added to the tree at position index.
+    ///
     fn decode_node(data: & bit_vec::BitVec, offset: & mut usize, tree: & mut [Node], index: & mut usize) -> usize{
         let current = *index;
-        *index = *index + 1;
+        *index += 1;
 
         let is_leaf = data[*offset];
-        *offset = *offset + 1;
+        *offset += 1;
 
         if is_leaf {
             let value = decode_byte(&data, offset);
@@ -57,7 +71,13 @@ pub mod hufman {
         return current;
     }
 
-    pub fn decode(input: &[u8]) -> &[u8] {
+    ///
+    /// Decodes a input array consisting of a hufmann tree at the beginning followed by the
+    /// actual data.
+    ///
+    /// The output_size is the maximum size of the decoded output.
+    ///
+    pub fn decode(input: &[u8], output_size: usize) -> Vec<u8> {
         let bit_vec = bit_vec::BitVec::from_bytes(input);
         let mut tree : [Node; 511] = [Default::default(); 511];
         let mut index : usize = 0;
@@ -65,6 +85,26 @@ pub mod hufman {
         
         decode_node(& bit_vec, & mut offset, & mut tree, & mut index);
 
-        return input;
+        let mut left : usize = output_size ;
+        let mut o : usize = 0;
+
+        let mut output =vec![0; output_size];
+
+        while left > 0 {
+            let mut branch = tree[0];
+            while !branch.is_leaf {
+                let t = if ! bit_vec[(offset)] {
+                    branch.left as usize
+                } else {
+                    branch.right as usize
+                };
+                offset += 1;
+                branch = tree[t];
+            }
+            output[o] = branch.symbol;
+            o += 1;
+            left -= 1;
+        }
+        return output;
     }
 }

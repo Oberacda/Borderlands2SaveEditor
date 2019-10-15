@@ -7,5 +7,10 @@ edition = "2018"
 [dependencies.borderlands2]
 path = "borderlands2"
 
+[dependencies.protobuf]
+git = "https://github.com/stepancheg/rust-protobuf.git"
+features = ["with-bytes"]
+
 [workspace]
 members = ["borderlands2"]
+
