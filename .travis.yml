@@ -25,6 +25,7 @@ addons:
       - gcc
       - cmake
       - lzo
+    update: true
 
 sudo: required
 
