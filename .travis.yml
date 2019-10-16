@@ -38,11 +38,9 @@ before_script:
 
 script:
   - cargo build
-  - mkdir -p "cov/borderlands2"
-  - ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "cargo test --all"
+  - cargo test --all
 
 after_success:
-  - cd cov/borderlands2
-  - ls -l
+  - for file in target/debug/borderlands2_save_editor-*; do [ -x "${file}" ] || continue; mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
   - bash <(curl -s https://codecov.io/bash)
 
