@@ -83,7 +83,7 @@ pub fn load_save(save_file_path: std::string::String) -> Result<WillowTwoPlayerS
 #[cfg(test)]
 mod tests {
     #[test]
-    fn it_works() {
+    fn load_save_test() {
         let _save_file =  super::load_save("./resources/Save0001.sav".to_string());
     }
 }
