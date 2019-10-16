@@ -1,7 +1,11 @@
 language: rust
 rust:
   - stable
+  - beta
+  - nightly
 matrix:
+  allow_failures:
+    - rust: nightly
   fast_finish: true
 cache: cargo
 os: linux
@@ -20,7 +24,7 @@ addons:
 
 sudo: required
 
-after_success: |
+before_script: |
   wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
   tar xzf master.tar.gz &&
   cd kcov-master &&
@@ -31,6 +35,14 @@ after_success: |
   make install DESTDIR=../../kcov-build &&
   cd ../.. &&
   rm -rf kcov-master &&
-  for file in target/debug/examplerust-*; do [ -x "${file}" ] || continue; mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
-  bash <(curl -s https://codecov.io/bash) &&
-  echo "Uploaded code coverage"
+
+script:
+  - cargo build
+  - mkdir -p "cov/borderlands2"
+  - ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "cargo test --all"
+
+after_success:
+  - cd cov/borderlands2
+  - ls -l
+  - bash <(curl -s https://codecov.io/bash)
+
