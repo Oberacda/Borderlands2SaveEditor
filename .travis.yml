@@ -6,7 +6,7 @@ matrix:
 cache: cargo
 os:
   - linux
-  - osx
+#  - osx
 
 addons:
   apt:
@@ -33,10 +33,14 @@ addons:
 
 sudo: required
 
+before_script:
+  - cargo install cargo-kcov
+
 script:
   - cargo build
   - cargo test --all
 
 after_success:
-  - for file in target/debug/borderlands2-*; do [ -x "${file}" ] || continue; mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib "target/cov/$(basename $file)" "$file"; done &&  bash <(curl -s https://codecov.io/bash)
+  - cargo kcov --all --verbose --coveralls
+#  - for file in target/debug/borderlands2-*; do [ -x "${file}" ] || continue; mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib "target/cov/$(basename $file)" "$file"; done &&  bash <(curl -s https://codecov.io/bash)
 
