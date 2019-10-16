@@ -1,13 +1,13 @@
 language: rust
 rust:
   - stable
-  - beta
+#  - beta
 #  - nightly
 matrix:
 #  allow_failures:
 #    - rust: nightly
   fast_finish: true
-cache: cargo
+
 os:
   - linux
 #  - osx
@@ -34,8 +34,6 @@ addons:
       - dwarf
       - kcov
     update: true
-
-sudo: required
 
 before_script:
   - cargo install cargo-kcov --force
