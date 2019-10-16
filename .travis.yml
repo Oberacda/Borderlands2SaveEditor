@@ -1,14 +1,12 @@
 language: rust
 rust:
   - stable
-  - beta
-  - nightly
 matrix:
-  allow_failures:
-    - rust: nightly
   fast_finish: true
 cache: cargo
-os: linux
+os:
+  - linux
+  - osx
 
 addons:
   apt:
@@ -21,6 +19,12 @@ addons:
       - binutils-dev
       - libiberty-dev
       - liblzo2-dev
+  homebrew:
+    packages:
+      - curl
+      - gcc
+      - cmake
+      - lzo
 
 sudo: required
 
@@ -41,6 +45,5 @@ script:
   - cargo test --all
 
 after_success:
-  - for file in target/debug/borderlands2_save_editor-*; do [ -x "${file}" ] || continue; mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
-  - bash <(curl -s https://codecov.io/bash)
+  - for file in target/debug/borderlands2_save_editor-*; do [ -x "${file}" ] || continue; mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&  bash <(curl -s https://codecov.io/bash)
 
