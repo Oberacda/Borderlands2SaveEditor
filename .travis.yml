@@ -16,10 +16,10 @@ addons:
       - libdw-dev
       - cmake
       - gcc
+      - g++
       - binutils-dev
       - libiberty-dev
       - liblzo2-dev
-      - kcov
   homebrew:
     packages:
       - curl
@@ -35,6 +35,7 @@ sudo: required
 
 before_script:
   - cargo install cargo-kcov
+  - cargo kcov --print-install-kcov-sh | sh
 
 script:
   - cargo build
