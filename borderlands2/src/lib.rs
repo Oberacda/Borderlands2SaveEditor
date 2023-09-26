@@ -13,45 +13,70 @@ use std::convert::TryFrom;
 use hufman::hufman::decode;
 
 use protobuf::Message;
-use sha1::{Sha1, Digest};
+use sha1::{Digest, Sha1};
 
-
-pub enum LoadSaveError{
+pub enum LoadSaveError {
     IOError { msg: String },
-    BufferError { msg: String},
-    ParsingError { msg: String}
+    BufferError { msg: String },
+    ParsingError { msg: String },
+}
+
+impl std::fmt::Display for LoadSaveError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            LoadSaveError::IOError { msg } => write!(f, "IOError: {}", msg),
+            LoadSaveError::BufferError { msg } => write!(f, "BufferError: {}", msg),
+            LoadSaveError::ParsingError { msg } => write!(f, "ParsingError: {}", msg),
+        }
+    }
 }
 
 ///
-/// 
-pub fn load_save(save_file_path: std::string::String) -> Result<WillowTwoPlayerSaveGame::WillowTwoPlayerSaveGame, LoadSaveError> {
+///
+pub fn load_save(
+    save_file_path: std::string::String,
+) -> Result<WillowTwoPlayerSaveGame::WillowTwoPlayerSaveGame, LoadSaveError> {
     let metadata = match fs::metadata(&save_file_path) {
         Ok(file) => file,
-        Err(msg) => return Err(LoadSaveError::IOError { msg: msg.to_string() })
+        Err(msg) => {
+            return Err(LoadSaveError::IOError {
+                msg: msg.to_string(),
+            })
+        }
     };
     let _file_len = metadata.len();
 
-    let mut file =  match File::open(&save_file_path) {
+    let mut file = match File::open(&save_file_path) {
         Ok(file) => file,
-        Err(msg) => return Err(LoadSaveError::IOError { msg: msg.to_string() })
+        Err(msg) => {
+            return Err(LoadSaveError::IOError {
+                msg: msg.to_string(),
+            })
+        }
     };
     let mut buffer = Vec::new();
 
     match file.read_to_end(&mut buffer) {
-        Ok(_) => {},
-        Err(msg) => return Err(LoadSaveError::IOError { msg: msg.to_string() })
+        Ok(_) => {}
+        Err(msg) => {
+            return Err(LoadSaveError::IOError {
+                msg: msg.to_string(),
+            })
+        }
     };
     load_save_mem(buffer)
 }
 
-
-pub fn load_save_mem(buffer: Vec<u8>) -> Result<WillowTwoPlayerSaveGame::WillowTwoPlayerSaveGame, LoadSaveError>{
-
+pub fn load_save_mem(
+    buffer: Vec<u8>,
+) -> Result<WillowTwoPlayerSaveGame::WillowTwoPlayerSaveGame, LoadSaveError> {
     if buffer.len() < 24 {
-        return Err(LoadSaveError::ParsingError { msg: "Lenght to small".to_string() });
+        return Err(LoadSaveError::ParsingError {
+            msg: "Lenght to small".to_string(),
+        });
     }
 
-    let buffer_checksum =  &buffer[..20];
+    let buffer_checksum = &buffer[..20];
     let buffer_data = &buffer[20..];
 
     let mut hasher = Sha1::new();
@@ -59,7 +84,9 @@ pub fn load_save_mem(buffer: Vec<u8>) -> Result<WillowTwoPlayerSaveGame::WillowT
     let res = hasher.result();
 
     if res[..] != buffer_checksum[..] {
-        return Err(LoadSaveError::ParsingError { msg: "Checksum does not match!".to_string() });
+        return Err(LoadSaveError::ParsingError {
+            msg: "Checksum does not match!".to_string(),
+        });
     }
 
     let mut uncompressed_size_bytes = [0; 4];
@@ -67,32 +94,43 @@ pub fn load_save_mem(buffer: Vec<u8>) -> Result<WillowTwoPlayerSaveGame::WillowT
 
     let compressed_data = &buffer_data[4..];
 
-
     unsafe {
-        let uncompressed_size_int = std::mem::transmute::<[u8; 4], u32>(uncompressed_size_bytes).to_be() as u64;
+        let uncompressed_size_int =
+            std::mem::transmute::<[u8; 4], u32>(uncompressed_size_bytes).to_be() as u64;
         println!("Uncompressed size: {}", uncompressed_size_int);
 
         let uncompressed_size = match usize::try_from(uncompressed_size_int) {
             Ok(size) => size,
-            Err(_) => return Err(LoadSaveError::ParsingError { msg: "Could not decompress size!".to_string() })
+            Err(_) => {
+                return Err(LoadSaveError::ParsingError {
+                    msg: "Could not decompress size!".to_string(),
+                })
+            }
         };
-        let uncompressed_data = match minilzo::decompress(compressed_data,  uncompressed_size) {
+        let uncompressed_data = match minilzo::decompress(compressed_data, uncompressed_size) {
             Ok(decompressed_data) => decompressed_data,
-            Err(msg) => return Err(LoadSaveError::ParsingError { msg: format!("Decompression error: {0}", msg) })
+            Err(msg) => {
+                return Err(LoadSaveError::ParsingError {
+                    msg: format!("Decompression error: {0}", msg),
+                })
+            }
         };
         handle_uncompressed_data(uncompressed_data)
     }
 }
 
-pub unsafe fn handle_uncompressed_data(uncompressed_data: Vec<u8>) -> Result<WillowTwoPlayerSaveGame::WillowTwoPlayerSaveGame, LoadSaveError> {
-    
+pub unsafe fn handle_uncompressed_data(
+    uncompressed_data: Vec<u8>,
+) -> Result<WillowTwoPlayerSaveGame::WillowTwoPlayerSaveGame, LoadSaveError> {
     let mut inner_size_bytes = [0; 4];
     let mut magic_number_bytes = [0; 3];
     let mut version_bytes = [0; 4];
     let mut hash_bytes = [0; 4];
     let mut inner_uncompressed_size_bytes = [0; 4];
     if uncompressed_data.len() < 20 {
-        return Err(LoadSaveError::ParsingError { msg: "Uncompressed buffer to small!".to_string() });
+        return Err(LoadSaveError::ParsingError {
+            msg: "Uncompressed buffer to small!".to_string(),
+        });
     }
 
     inner_size_bytes.clone_from_slice(&uncompressed_data[..4]);
@@ -110,16 +148,23 @@ pub unsafe fn handle_uncompressed_data(uncompressed_data: Vec<u8>) -> Result<Wil
     println!("Hash: {}", hash);
 
     inner_uncompressed_size_bytes.clone_from_slice(&uncompressed_data[15..19]);
-    let inner_uncompressed_size = std::mem::transmute::<[u8; 4], i32>(inner_uncompressed_size_bytes ).to_le() as usize;
+    let inner_uncompressed_size =
+        std::mem::transmute::<[u8; 4], i32>(inner_uncompressed_size_bytes).to_le() as usize;
 
     let inner_compressed_data = &uncompressed_data[19..];
 
     let inner_uncompressed_data = decode(inner_compressed_data, inner_uncompressed_size);
 
-    let save_game_res = WillowTwoPlayerSaveGame::WillowTwoPlayerSaveGame::parse_from_bytes(inner_uncompressed_data.as_ref());
+    let save_game_res = WillowTwoPlayerSaveGame::WillowTwoPlayerSaveGame::parse_from_bytes(
+        inner_uncompressed_data.as_ref(),
+    );
     let save_game = match save_game_res {
         Ok(save_game) => save_game,
-        Err(msg) => return Err(LoadSaveError::ParsingError { msg: msg.to_string() })
+        Err(msg) => {
+            return Err(LoadSaveError::ParsingError {
+                msg: msg.to_string(),
+            })
+        }
     };
 
     Ok(save_game)
@@ -129,6 +174,6 @@ pub unsafe fn handle_uncompressed_data(uncompressed_data: Vec<u8>) -> Result<Wil
 mod tests {
     #[test]
     fn load_save_test() {
-        let _save_file =  super::load_save("./resources/Save0001.sav".to_string());
+        let _save_file = super::load_save("./resources/Save0001.sav".to_string());
     }
 }
