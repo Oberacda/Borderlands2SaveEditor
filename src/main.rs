@@ -13,7 +13,7 @@ fn main() -> std::io::Result<()> {
     }
 
     let save_file = save_file_res.unwrap();
-    let string_result = protobuf::json::print_to_string(&save_file);
+    let string_result = protobuf_json_mapping::print_to_string(&save_file);
     fs::write("dump.json", &string_result.unwrap())?;
     Ok(())
 }

@@ -9,7 +9,8 @@ pub mod hufman {
     /// Struct describing a node in a huffman tree.
     /// 
     #[derive(Copy, Clone, Debug)]
-    struct Node {
+    #[derive(Default)]
+struct Node {
         /// Symbol encoded in this node of the tree.
         symbol : u8,
         /// Is this node a leaf?
@@ -19,11 +20,7 @@ pub mod hufman {
         /// Index of the right subtree. If node is a leaf, this is -1.
         right : i64
     }
-    impl Default for Node {
-    fn default() -> Node {
-        Node {symbol: 0, is_leaf: false, right: 0, left: 0}
-   }
-}
+    
     ///
     /// Decodes a byte from the data BitVec starting at offset.
     ///
@@ -37,10 +34,10 @@ pub mod hufman {
             } else {
                 0
             };
-            *offset = *offset + 1;
+            *offset += 1;
             value |= v << i;
         }
-        return value;
+        value
     }
 
     ///
@@ -57,18 +54,18 @@ pub mod hufman {
         *offset += 1;
 
         if is_leaf {
-            let value = decode_byte(&data, offset);
+            let value = decode_byte(data, offset);
             tree[current].left = -1;
             tree[current].right = -1;
             tree[current].is_leaf = true;
             tree[current].symbol = value;
         } else {
             tree[current].is_leaf = false;
-            tree[current].left = decode_node(&data, offset, tree, index) as i64;
-            tree[current].right = decode_node(&data, offset, tree, index) as i64;
+            tree[current].left = decode_node(data, offset, tree, index) as i64;
+            tree[current].right = decode_node(data, offset, tree, index) as i64;
         }
 
-        return current;
+        current
     }
 
     ///
@@ -93,7 +90,7 @@ pub mod hufman {
         while left > 0 {
             let mut branch = tree[0];
             while !branch.is_leaf {
-                let t = if ! bit_vec[(offset)] {
+                let t = if ! bit_vec[offset] {
                     branch.left as usize
                 } else {
                     branch.right as usize
@@ -105,6 +102,6 @@ pub mod hufman {
             o += 1;
             left -= 1;
         }
-        return output;
+        output
     }
 }

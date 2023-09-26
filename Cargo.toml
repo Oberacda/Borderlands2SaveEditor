@@ -2,15 +2,20 @@
 name = "borderlands2_save_editor"
 version = "0.1.0"
 authors = ["David Oberacker <david.oberacker@microchip.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies.borderlands2]
 path = "borderlands2"
 
 [dependencies.protobuf]
-git = "https://github.com/stepancheg/rust-protobuf.git"
+version = "3.2.0"
 features = ["with-bytes"]
 
+[dependencies.protobuf-json-mapping]
+version = "3.2.0"
+
 [workspace]
-members = ["borderlands2"]
+members = [
+  "borderlands2",
+  ]
 

@@ -1,18 +1,14 @@
-extern crate protoc_rust;
+extern crate protobuf_codegen;
 
 use std::fs;
 
-use protoc_rust::Customize;
 
 fn main() {
-	let dir_result = fs::create_dir_all("src/protos");
-	if dir_result.is_err() {
-		panic!("cargo:warning=Output dir cannot be created!");
-	}
-
-	protoc_rust::Args::new()
-		.out_dir("src/protos")
-		.inputs(&[
+        protobuf_codegen::Codegen::new()
+        // Use `protoc` parser, optional.
+        .protoc()
+        .includes(["./protos"])
+        .inputs([
 			"./protos/BankSlot.proto",
 			"./protos/ChallengeData.proto",
 			"./protos/ChosenVehicleCustomization.proto",
@@ -44,7 +40,6 @@ fn main() {
 			"./protos/WillowTwoPlayerSaveGame.proto",
 			"./protos/WorldDiscoveryData.proto"
 		])
-	.include("protos")
-		.run()
-		.expect("protoc");
+	        .cargo_out_dir("protos")
+                .run_from_script();
 }
