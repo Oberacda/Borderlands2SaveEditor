@@ -191,4 +191,16 @@ mod tests {
         let load_save_result = super::load_save(save_game_file_path_string);
         assert!(load_save_result.is_ok());
     }
+
+    #[test]
+    fn load_save_test_2() {
+        let cwd = env::current_dir().unwrap();
+        let save_game_file_path = cwd
+            .join("resources")
+            .join("Save0002.sav");
+        let save_game_file_path_string = save_game_file_path.to_str().unwrap();
+
+        let load_save_result = super::load_save(save_game_file_path_string);
+        assert!(load_save_result.is_err());
+    }
 }

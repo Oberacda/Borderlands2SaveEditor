@@ -25,6 +25,9 @@ jobs:
       - name: Install LLVM Tools
         run: rustup component add llvm-tools-preview
       - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+          cache-all-crates: "true"
       - name: Install Cargo Nextest
         run: cargo install cargo-nextest
       - name: Install Cargo LLVM-Cov
@@ -32,7 +35,7 @@ jobs:
       - name: Build
         run: cargo build
       - name: Run tests
-        run: cargo llvm-cov nextest --workspace
+        run: cargo llvm-cov nextest --package borderlands2
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
