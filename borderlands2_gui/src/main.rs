@@ -1,124 +1,414 @@
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
+use iced::widget::scrollable::{Properties, Scrollbar, Scroller};
+use iced::widget::{
+    button, column, container, horizontal_space, progress_bar, radio, row,
+    scrollable, slider, text, vertical_space,
+};
+use iced::{executor, theme, Alignment, Color};
+use iced::{Application, Command, Element, Length, Settings, Theme};
 
-extern crate borderlands2;
-extern crate eframe;
+use once_cell::sync::Lazy;
 
-use eframe::egui;
+static SCROLLABLE_ID: Lazy<scrollable::Id> = Lazy::new(scrollable::Id::unique);
 
-fn main() -> Result<(), eframe::Error> {
-    env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
-
-    let options = eframe::NativeOptions {
-        drag_and_drop_support: true,
-        initial_window_size: Some(egui::vec2(320.0, 240.0)),
-        ..Default::default()
-    };
-    eframe::run_native(
-        "Native file dialogs and drag-and-drop files",
-        options,
-        Box::new(|_cc| Box::<MyApp>::default()),
-    )
-
-
+pub fn main() -> iced::Result {
+    ScrollableDemo::run(Settings::default())
 }
 
-#[derive(Default)]
-struct MyApp {
-    dropped_files: Vec<egui::DroppedFile>,
-    picked_path: Option<String>,
+struct ScrollableDemo {
+    scrollable_direction: Direction,
+    scrollbar_width: u16,
+    scrollbar_margin: u16,
+    scroller_width: u16,
+    current_scroll_offset: scrollable::RelativeOffset,
+    alignment: scrollable::Alignment,
 }
 
-impl eframe::App for MyApp {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
-            ui.label("Drag-and-drop files onto the window!");
+#[derive(Debug, Clone, Eq, PartialEq, Copy)]
+enum Direction {
+    Vertical,
+    Horizontal,
+    Multi,
+}
 
-            if ui.button("Open file…").clicked() {
-                if let Some(path) = rfd::FileDialog::new().pick_file() {
-                    self.picked_path = Some(path.display().to_string());
-                }
+#[derive(Debug, Clone)]
+enum Message {
+    SwitchDirection(Direction),
+    AlignmentChanged(scrollable::Alignment),
+    ScrollbarWidthChanged(u16),
+    ScrollbarMarginChanged(u16),
+    ScrollerWidthChanged(u16),
+    ScrollToBeginning,
+    ScrollToEnd,
+    Scrolled(scrollable::Viewport),
+}
+
+impl Application for ScrollableDemo {
+    type Executor = executor::Default;
+    type Message = Message;
+    type Theme = Theme;
+    type Flags = ();
+
+    fn new(_flags: Self::Flags) -> (Self, Command<Message>) {
+        (
+            ScrollableDemo {
+                scrollable_direction: Direction::Vertical,
+                scrollbar_width: 10,
+                scrollbar_margin: 0,
+                scroller_width: 10,
+                current_scroll_offset: scrollable::RelativeOffset::START,
+                alignment: scrollable::Alignment::Start,
+            },
+            Command::none(),
+        )
+    }
+
+    fn title(&self) -> String {
+        String::from("Scrollable - Iced")
+    }
+
+    fn update(&mut self, message: Message) -> Command<Message> {
+        match message {
+            Message::SwitchDirection(direction) => {
+                self.current_scroll_offset = scrollable::RelativeOffset::START;
+                self.scrollable_direction = direction;
+
+                scrollable::snap_to(
+                    SCROLLABLE_ID.clone(),
+                    self.current_scroll_offset,
+                )
             }
+            Message::AlignmentChanged(alignment) => {
+                self.current_scroll_offset = scrollable::RelativeOffset::START;
+                self.alignment = alignment;
 
-            if let Some(picked_path) = &self.picked_path {
-                ui.horizontal(|ui| {
-                    ui.label("Picked file:");
-                    ui.monospace(picked_path);
-                });
+                scrollable::snap_to(
+                    SCROLLABLE_ID.clone(),
+                    self.current_scroll_offset,
+                )
             }
+            Message::ScrollbarWidthChanged(width) => {
+                self.scrollbar_width = width;
 
-            // Show dropped files (if any):
-            if !self.dropped_files.is_empty() {
-                ui.group(|ui| {
-                    ui.label("Dropped files:");
+                Command::none()
+            }
+            Message::ScrollbarMarginChanged(margin) => {
+                self.scrollbar_margin = margin;
 
-                    for file in &self.dropped_files {
-                        let mut info = if let Some(path) = &file.path {
-                            path.display().to_string()
-                        } else if !file.name.is_empty() {
-                            file.name.clone()
-                        } else {
-                            "???".to_owned()
-                        };
+                Command::none()
+            }
+            Message::ScrollerWidthChanged(width) => {
+                self.scroller_width = width;
 
-                        let mut additional_info = vec![];
-                        if !file.mime.is_empty() {
-                            additional_info.push(format!("type: {}", file.mime));
+                Command::none()
+            }
+            Message::ScrollToBeginning => {
+                self.current_scroll_offset = scrollable::RelativeOffset::START;
+
+                scrollable::snap_to(
+                    SCROLLABLE_ID.clone(),
+                    self.current_scroll_offset,
+                )
+            }
+            Message::ScrollToEnd => {
+                self.current_scroll_offset = scrollable::RelativeOffset::END;
+
+                scrollable::snap_to(
+                    SCROLLABLE_ID.clone(),
+                    self.current_scroll_offset,
+                )
+            }
+            Message::Scrolled(viewport) => {
+                self.current_scroll_offset = viewport.relative_offset();
+
+                Command::none()
+            }
+        }
+    }
+
+    fn view(&self) -> Element<Message> {
+        let scrollbar_width_slider = slider(
+            0..=15,
+            self.scrollbar_width,
+            Message::ScrollbarWidthChanged,
+        );
+        let scrollbar_margin_slider = slider(
+            0..=15,
+            self.scrollbar_margin,
+            Message::ScrollbarMarginChanged,
+        );
+        let scroller_width_slider =
+            slider(0..=15, self.scroller_width, Message::ScrollerWidthChanged);
+
+        let scroll_slider_controls = column![
+            text("Scrollbar width:"),
+            scrollbar_width_slider,
+            text("Scrollbar margin:"),
+            scrollbar_margin_slider,
+            text("Scroller width:"),
+            scroller_width_slider,
+        ]
+            .spacing(10)
+            .width(Length::Fill);
+
+        let scroll_orientation_controls = column(vec![
+            text("Scrollbar direction:").into(),
+            radio(
+                "Vertical",
+                Direction::Vertical,
+                Some(self.scrollable_direction),
+                Message::SwitchDirection,
+            )
+                .into(),
+            radio(
+                "Horizontal",
+                Direction::Horizontal,
+                Some(self.scrollable_direction),
+                Message::SwitchDirection,
+            )
+                .into(),
+            radio(
+                "Both!",
+                Direction::Multi,
+                Some(self.scrollable_direction),
+                Message::SwitchDirection,
+            )
+                .into(),
+        ])
+            .spacing(10)
+            .width(Length::Fill);
+
+        let scroll_alignment_controls = column(vec![
+            text("Scrollable alignment:").into(),
+            radio(
+                "Start",
+                scrollable::Alignment::Start,
+                Some(self.alignment),
+                Message::AlignmentChanged,
+            )
+                .into(),
+            radio(
+                "End",
+                scrollable::Alignment::End,
+                Some(self.alignment),
+                Message::AlignmentChanged,
+            )
+                .into(),
+        ])
+            .spacing(10)
+            .width(Length::Fill);
+
+        let scroll_controls = row![
+            scroll_slider_controls,
+            scroll_orientation_controls,
+            scroll_alignment_controls
+        ]
+            .spacing(20)
+            .width(Length::Fill);
+
+        let scroll_to_end_button = || {
+            button("Scroll to end")
+                .padding(10)
+                .on_press(Message::ScrollToEnd)
+        };
+
+        let scroll_to_beginning_button = || {
+            button("Scroll to beginning")
+                .padding(10)
+                .on_press(Message::ScrollToBeginning)
+        };
+
+        let scrollable_content: Element<Message> =
+            Element::from(match self.scrollable_direction {
+                Direction::Vertical => scrollable(
+                    column![
+                        scroll_to_end_button(),
+                        text("Beginning!"),
+                        vertical_space(1200),
+                        text("Middle!"),
+                        vertical_space(1200),
+                        text("End!"),
+                        scroll_to_beginning_button(),
+                    ]
+                        .width(Length::Fill)
+                        .align_items(Alignment::Center)
+                        .padding([40, 0, 40, 0])
+                        .spacing(40),
+                )
+                    .height(Length::Fill)
+                    .direction(scrollable::Direction::Vertical(
+                        Properties::new()
+                            .width(self.scrollbar_width)
+                            .margin(self.scrollbar_margin)
+                            .scroller_width(self.scroller_width)
+                            .alignment(self.alignment),
+                    ))
+                    .id(SCROLLABLE_ID.clone())
+                    .on_scroll(Message::Scrolled),
+                Direction::Horizontal => scrollable(
+                    row![
+                        scroll_to_end_button(),
+                        text("Beginning!"),
+                        horizontal_space(1200),
+                        text("Middle!"),
+                        horizontal_space(1200),
+                        text("End!"),
+                        scroll_to_beginning_button(),
+                    ]
+                        .height(450)
+                        .align_items(Alignment::Center)
+                        .padding([0, 40, 0, 40])
+                        .spacing(40),
+                )
+                    .height(Length::Fill)
+                    .direction(scrollable::Direction::Horizontal(
+                        Properties::new()
+                            .width(self.scrollbar_width)
+                            .margin(self.scrollbar_margin)
+                            .scroller_width(self.scroller_width)
+                            .alignment(self.alignment),
+                    ))
+                    .style(theme::Scrollable::custom(ScrollbarCustomStyle))
+                    .id(SCROLLABLE_ID.clone())
+                    .on_scroll(Message::Scrolled),
+                Direction::Multi => scrollable(
+                    //horizontal content
+                    row![
+                        column![
+                            text("Let's do some scrolling!"),
+                            vertical_space(2400)
+                        ],
+                        scroll_to_end_button(),
+                        text("Horizontal - Beginning!"),
+                        horizontal_space(1200),
+                        //vertical content
+                        column![
+                            text("Horizontal - Middle!"),
+                            scroll_to_end_button(),
+                            text("Vertical - Beginning!"),
+                            vertical_space(1200),
+                            text("Vertical - Middle!"),
+                            vertical_space(1200),
+                            text("Vertical - End!"),
+                            scroll_to_beginning_button(),
+                            vertical_space(40),
+                        ]
+                        .spacing(40),
+                        horizontal_space(1200),
+                        text("Horizontal - End!"),
+                        scroll_to_beginning_button(),
+                    ]
+                        .align_items(Alignment::Center)
+                        .padding([0, 40, 0, 40])
+                        .spacing(40),
+                )
+                    .height(Length::Fill)
+                    .direction({
+                        let properties = Properties::new()
+                            .width(self.scrollbar_width)
+                            .margin(self.scrollbar_margin)
+                            .scroller_width(self.scroller_width)
+                            .alignment(self.alignment);
+
+                        scrollable::Direction::Both {
+                            horizontal: properties,
+                            vertical: properties,
                         }
-                        if let Some(bytes) = &file.bytes {
-                            additional_info.push(format!("{} bytes", bytes.len()));
-                        }
-                        if !additional_info.is_empty() {
-                            info += &format!(" ({})", additional_info.join(", "));
-                        }
+                    })
+                    .style(theme::Scrollable::Custom(Box::new(
+                        ScrollbarCustomStyle,
+                    )))
+                    .id(SCROLLABLE_ID.clone())
+                    .on_scroll(Message::Scrolled),
+            });
 
-                        ui.label(info);
-                    }
-                });
+        let progress_bars: Element<Message> = match self.scrollable_direction {
+            Direction::Vertical => {
+                progress_bar(0.0..=1.0, self.current_scroll_offset.y).into()
             }
-        });
-
-        preview_files_being_dropped(ctx);
-
-        // Collect dropped files:
-        ctx.input(|i| {
-            if !i.raw.dropped_files.is_empty() {
-                self.dropped_files = i.raw.dropped_files.clone();
+            Direction::Horizontal => {
+                progress_bar(0.0..=1.0, self.current_scroll_offset.x)
+                    .style(progress_bar_custom_style)
+                    .into()
             }
-        });
+            Direction::Multi => column![
+                progress_bar(0.0..=1.0, self.current_scroll_offset.y),
+                progress_bar(0.0..=1.0, self.current_scroll_offset.x)
+                    .style(progress_bar_custom_style)
+            ]
+                .spacing(10)
+                .into(),
+        };
+
+        let content: Element<Message> =
+            column![scroll_controls, scrollable_content, progress_bars]
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .align_items(Alignment::Center)
+                .spacing(10)
+                .into();
+
+        Element::from(
+            container(content)
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .padding(40)
+                .center_x()
+                .center_y(),
+        )
+    }
+
+    fn theme(&self) -> Self::Theme {
+        Theme::Dark
     }
 }
 
-/// Preview hovering files:
-fn preview_files_being_dropped(ctx: &egui::Context) {
-    use egui::*;
-    use std::fmt::Write as _;
+struct ScrollbarCustomStyle;
 
-    if !ctx.input(|i| i.raw.hovered_files.is_empty()) {
-        let text = ctx.input(|i| {
-            let mut text = "Dropping files:\n".to_owned();
-            for file in &i.raw.hovered_files {
-                if let Some(path) = &file.path {
-                    write!(text, "\n{}", path.display()).ok();
-                } else if !file.mime.is_empty() {
-                    write!(text, "\n{}", file.mime).ok();
-                } else {
-                    text += "\n???";
-                }
+impl scrollable::StyleSheet for ScrollbarCustomStyle {
+    type Style = Theme;
+
+    fn active(&self, style: &Self::Style) -> Scrollbar {
+        style.active(&theme::Scrollable::Default)
+    }
+
+    fn hovered(
+        &self,
+        style: &Self::Style,
+        is_mouse_over_scrollbar: bool,
+    ) -> Scrollbar {
+        style.hovered(&theme::Scrollable::Default, is_mouse_over_scrollbar)
+    }
+
+    fn hovered_horizontal(
+        &self,
+        style: &Self::Style,
+        is_mouse_over_scrollbar: bool,
+    ) -> Scrollbar {
+        if is_mouse_over_scrollbar {
+            Scrollbar {
+                background: style
+                    .active(&theme::Scrollable::default())
+                    .background,
+                border_radius: 2.0.into(),
+                border_width: 0.0,
+                border_color: Color::default(),
+                scroller: Scroller {
+                    color: Color::from_rgb8(250, 85, 134),
+                    border_radius: 2.0.into(),
+                    border_width: 0.0,
+                    border_color: Color::default(),
+                },
             }
-            text
-        });
+        } else {
+            self.active(style)
+        }
+    }
+}
 
-        let painter =
-            ctx.layer_painter(LayerId::new(Order::Foreground, Id::new("file_drop_target")));
-
-        let screen_rect = ctx.screen_rect();
-        painter.rect_filled(screen_rect, 0.0, Color32::from_black_alpha(192));
-        painter.text(
-            screen_rect.center(),
-            Align2::CENTER_CENTER,
-            text,
-            TextStyle::Heading.resolve(&ctx.style()),
-            Color32::WHITE,
-        );
+fn progress_bar_custom_style(theme: &Theme) -> progress_bar::Appearance {
+    progress_bar::Appearance {
+        background: theme.extended_palette().background.strong.color.into(),
+        bar: Color::from_rgb8(250, 85, 134).into(),
+        border_radius: 0.0.into(),
     }
 }
