@@ -18,6 +18,12 @@ jobs:
         run: sudo apt update -y
       - name: Install protoc
         run: sudo apt install -y protobuf-compiler
+      - name: Install nightly toolchain
+        run: rustup install nightly
+      - name: Set default toolchain
+        run: rustup default nightly
+      - name: Install LLVM Tools
+        run: rustup component add llvm-tools-preview
       - uses: Swatinem/rust-cache@v2
       - name: Install Cargo Nextest
         run: cargo install cargo-nextest
