@@ -1,4 +1,4 @@
-name: Rust CI
+name: CI
 
 on:
   push:
@@ -12,11 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Apt Update
+        run: sudo apt update -y
+      - name: Install protoc
+        run: sudo apt install -y protobuf-compiler
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
           components: clippy
-          override: true
+          default: true
       - uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -29,7 +33,7 @@ jobs:
         with:
           toolchain: nightly
           components: rustfmt
-          override: true
+          default: true
       - uses: mbrobbel/rustfmt-check@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -44,10 +48,10 @@ jobs:
         run: sudo apt update -y
       - name: Install protoc
         run: sudo apt install -y protobuf-compiler
-      - name: Install stable toolchain
-        run: rustup install stable
-      - name: Set default toolchain
-        run: rustup default stable
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          default: true
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: "true"
@@ -64,12 +68,11 @@ jobs:
         run: sudo apt update -y
       - name: Install protoc
         run: sudo apt install -y protobuf-compiler
-      - name: Install nightly toolchain
-        run: rustup install nightly
-      - name: Set default toolchain
-        run: rustup default nightly
-      - name: Install LLVM Tools
-        run: rustup component add llvm-tools-preview
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          components: llvm-tools-preview
+          default: true
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: "true"
