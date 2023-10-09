@@ -20,7 +20,7 @@ jobs:
       - name: Install Cargo LLVM-Cov
         run: cargo install cargo-llvm-cov
       - name: Build
-        run: cargo build --verbose
+        run: cargo build
       - name: Run tests
         run: cargo llvm-cov nextest --workspace
       - name: Publish Test Results
