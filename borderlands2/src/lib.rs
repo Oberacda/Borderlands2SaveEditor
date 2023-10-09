@@ -1,9 +1,9 @@
 include!(concat!(env!("OUT_DIR"), "/protos/mod.rs"));
 mod hufman;
 
+extern crate minilzo_rs;
 extern crate protobuf;
 extern crate sha1;
-extern crate minilzo_rs;
 
 use std::fs;
 use std::fs::File;
@@ -111,14 +111,13 @@ pub fn load_save_mem(
         };
         let lzo = minilzo_rs::LZO::init().unwrap();
         let decompressed_data = match lzo.decompress_safe(compressed_data, uncompressed_size) {
-            Ok(decompressed_data) => {decompressed_data}
+            Ok(decompressed_data) => decompressed_data,
             Err(err) => {
                 return Err(LoadSaveError::ParsingError {
-                    msg: format!("Could not decompress using LZO: {}", err)
+                    msg: format!("Could not decompress using LZO: {}", err),
                 })
             }
         };
-
 
         handle_uncompressed_data(decompressed_data)
     }
@@ -182,9 +181,7 @@ mod tests {
     #[test]
     fn load_save_test() {
         let cwd = env::current_dir().unwrap();
-        let save_game_file_path = cwd
-            .join("resources")
-            .join("Save0001.sav");
+        let save_game_file_path = cwd.join("resources").join("Save0001.sav");
         let save_game_file_path_string = save_game_file_path.to_str().unwrap();
         println!("{}", &save_game_file_path_string);
 
@@ -195,9 +192,7 @@ mod tests {
     #[test]
     fn load_save_test_2() {
         let cwd = env::current_dir().unwrap();
-        let save_game_file_path = cwd
-            .join("resources")
-            .join("Save0002.sav");
+        let save_game_file_path = cwd.join("resources").join("Save0002.sav");
         let save_game_file_path_string = save_game_file_path.to_str().unwrap();
 
         let load_save_result = super::load_save(save_game_file_path_string);
