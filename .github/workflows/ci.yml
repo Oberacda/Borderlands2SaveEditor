@@ -36,6 +36,8 @@ jobs:
         run: cargo build
       - name: Run tests
         run: cargo llvm-cov nextest --package borderlands2
+      - name: Generate coverage report
+        run:  cargo llvm-cov report --cobertura > coverage.xml
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
@@ -45,3 +47,6 @@ jobs:
       - name: Upload Coverage Results
         uses: coverallsapp/github-action@v2
         if: always()
+        with:
+          file: coverage.xml
+          format: cobertura
