@@ -3,6 +3,7 @@ mod hufman;
 
 extern crate protobuf;
 extern crate sha1;
+extern crate minilzo_rs;
 
 use std::fs;
 use std::fs::File;
@@ -10,11 +11,12 @@ use std::io::Read;
 
 use std::convert::TryFrom;
 
-use hufman::hufman::decode;
+use hufman::decode;
 
 use protobuf::Message;
 use sha1::{Digest, Sha1};
 
+#[derive(Debug)]
 pub enum LoadSaveError {
     IOError { msg: String },
     BufferError { msg: String },
@@ -34,7 +36,7 @@ impl std::fmt::Display for LoadSaveError {
 ///
 ///
 pub fn load_save(
-    save_file_path: std::string::String,
+    save_file_path: &str,
 ) -> Result<WillowTwoPlayerSaveGame::WillowTwoPlayerSaveGame, LoadSaveError> {
     let metadata = match fs::metadata(&save_file_path) {
         Ok(file) => file,
@@ -80,8 +82,8 @@ pub fn load_save_mem(
     let buffer_data = &buffer[20..];
 
     let mut hasher = Sha1::new();
-    hasher.input(buffer_data);
-    let res = hasher.result();
+    hasher.update(buffer_data);
+    let res = hasher.finalize();
 
     if res[..] != buffer_checksum[..] {
         return Err(LoadSaveError::ParsingError {
@@ -107,15 +109,18 @@ pub fn load_save_mem(
                 })
             }
         };
-        let uncompressed_data = match minilzo::decompress(compressed_data, uncompressed_size) {
-            Ok(decompressed_data) => decompressed_data,
-            Err(msg) => {
+        let lzo = minilzo_rs::LZO::init().unwrap();
+        let decompressed_data = match lzo.decompress_safe(compressed_data, uncompressed_size) {
+            Ok(decompressed_data) => {decompressed_data}
+            Err(err) => {
                 return Err(LoadSaveError::ParsingError {
-                    msg: format!("Decompression error: {0}", msg),
+                    msg: format!("Could not decompress using LZO: {}", err)
                 })
             }
         };
-        handle_uncompressed_data(uncompressed_data)
+
+
+        handle_uncompressed_data(decompressed_data)
     }
 }
 
@@ -172,8 +177,18 @@ pub unsafe fn handle_uncompressed_data(
 
 #[cfg(test)]
 mod tests {
+    use std::env;
+
     #[test]
     fn load_save_test() {
-        let _save_file = super::load_save("./resources/Save0001.sav".to_string());
+        let cwd = env::current_dir().unwrap();
+        let save_game_file_path = cwd
+            .join("resources")
+            .join("Save0001.sav");
+        let save_game_file_path_string = save_game_file_path.to_str().unwrap();
+        println!("{}", &save_game_file_path_string);
+
+        let load_save_result = super::load_save(save_game_file_path_string);
+        assert!(load_save_result.is_ok());
     }
 }

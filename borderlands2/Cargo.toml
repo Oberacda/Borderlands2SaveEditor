@@ -2,7 +2,7 @@
 name = "borderlands2"
 version = "0.1.0"
 authors = ["David Oberacker <david.oberacker@gmail.com>"]
-edition = "2018"
+edition = "2021"
 build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -10,8 +10,8 @@ build = "build.rs"
 version = "3.2.0"
 
 [dependencies]
-sha-1 = "0.8.1"
-minilzo = "0.2.0"
+sha-1 = "0.10.1"
+minilzo-rs = "0.6.0"
 bit-vec = "0.6"
 
 [dependencies.protobuf]

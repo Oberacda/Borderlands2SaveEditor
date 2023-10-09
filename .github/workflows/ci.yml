@@ -1,0 +1,32 @@
+name: Rust CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Cargo Nextest
+        run: cargo install cargo-nextest
+      - name: Install Cargo LLVM-Cov
+        run: cargo install cargo-llvm-cov
+      - name: Build
+        run: cargo build --verbose
+      - name: Run tests
+        run: cargo llvm-cov nextest --workspace
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            target/nextest/default/junit.xml
+      - name: Upload Coverage Results
+        uses: coverallsapp/github-action@v2
