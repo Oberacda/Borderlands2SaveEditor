@@ -196,6 +196,6 @@ mod tests {
         let save_game_file_path_string = save_game_file_path.to_str().unwrap();
 
         let load_save_result = super::load_save(save_game_file_path_string);
-        assert!(load_save_result.is_err());
+        assert!(load_save_result.is_ok());
     }
 }
